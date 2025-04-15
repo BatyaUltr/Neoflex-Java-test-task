@@ -14,10 +14,8 @@ public class CalculatorController {
     public ResponseEntity<String> calculateVacationMoney
             (@RequestBody @Valid VacationPay vacationPay) {
         CalculatorUtil calculatorUtil = new CalculatorUtil();
-        System.out.println("Ваши отпускные за " + vacationPay.getVacationDays() +
-                " дней составили: " + calculatorUtil.calculate(vacationPay));
-
+        String days = vacationPay.getVacationDays() <= 4 ? " дня " : " дней ";
         return ResponseEntity.ok("Ваши отпускные за " + vacationPay.getVacationDays() +
-                " дней составили: " + calculatorUtil.calculate(vacationPay));
+                days + "составили: " + calculatorUtil.calculate(vacationPay));
     }
 }
