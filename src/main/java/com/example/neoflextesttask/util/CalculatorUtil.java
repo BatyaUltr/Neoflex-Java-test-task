@@ -1,7 +1,6 @@
 package com.example.neoflextesttask.util;
 
 import com.example.neoflextesttask.dto.VacationPay;
-import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
