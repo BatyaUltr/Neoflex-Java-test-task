@@ -15,7 +15,19 @@
 - Gradle (Groovy);
 - Spring Boot;
 - Junit (для тестирования);
-- Docker (возможно).
+- Docker (<u>возможно</u>).
 
 ### Запуск проекта:
-**TODO**
+- Для построения проекта выполните команду: `./gradlew clean build`;
+- Для запуска проекта выполните команду: `./gradlew bootRun`.
+
+### Примеры использования программы
+Для расчета отпускных без учета выходных и праздников: 
+<localhost:8080/api/vacations/calculate?salaryPerYear=x&vacationDays=y>, 
+где x - годовая зарплата, y - количество дней отпуска.
+
+Для расчета отпускных с учетом выходных и праздников:
+<localhost:8080/api/vacations/calculate?salaryPerYear=x&startDate=a&endDate=b>, 
+где a и b - дата начала и конца отпуска, соответственно, в формате (YYYY-MM-dd).
+
+***Тестирование производилось с помощью Postman и Junit.***

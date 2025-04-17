@@ -1,48 +1,61 @@
 package com.example.neoflextesttask.controllers;
 
-import com.example.neoflextesttask.dto.VacationPay;
 import com.example.neoflextesttask.util.CalculatorUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/vacations")
+@RequiredArgsConstructor
 public class CalculatorController {
-    @PostMapping("/calculate")
+    private final CalculatorUtil calculatorUtil;
+    private static final Integer minDays = 0;
+    private static final Integer maxDays = 365;
+
+    @GetMapping("/calculate")
     public ResponseEntity<String> calculateVacationMoney
-            (@RequestBody VacationPay vacationPay) {
-        CalculatorUtil calculatorUtil = new CalculatorUtil();
+            (@RequestParam BigDecimal salaryPerYear,
+             @RequestParam(required = false) Integer vacationDays,
+             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        if (vacationPay.getSalaryPerYear().intValue() < 0) {
+//        CalculatorUtil calculatorUtil = new CalculatorUtil();
+
+        ResponseEntity<String> response = null;
+
+        if (salaryPerYear.intValue() < 0) {
             return ResponseEntity.ok("Зарплата не может быть отрицательной!");
         }
 
-        if (vacationPay.getVacationDays() < 1 || vacationPay.getVacationDays() > 365) {
-            return ResponseEntity.ok("Количество дней должно быть в " +
-                    "диапазоне от 1 до 365 дней!");
+        if (startDate == null && endDate == null && vacationDays != null) {
+            if (vacationDays < minDays || vacationDays > maxDays) {
+                return ResponseEntity.ok("Количество дней должно быть в " +
+                        "диапазоне от " + minDays + " до " + maxDays + " дней!");
+            }
+
+            String days = calculatorUtil.getDayAddition(vacationDays);
+            response = ResponseEntity.ok("Ваши отпускные за " + vacationDays +
+                    days + " составили: " + calculatorUtil.calculate(salaryPerYear, vacationDays));
+        } else if (startDate != null && endDate != null && vacationDays == null) {
+            if (startDate.isAfter(endDate)) {
+                return ResponseEntity.ok("Дата начала отпуска должна быть раньше конца отпуска!");
+            }
+
+            int paymentDays = calculatorUtil.countPaymentDays(startDate, endDate);
+            String days = calculatorUtil.getDayAddition(paymentDays);
+            response = ResponseEntity.ok("Ваши отпускные за " + paymentDays + days +
+                    " составили: " + calculatorUtil.calculateMoreAccurate(salaryPerYear, startDate, endDate));
         }
 
-        String days = calculatorUtil.getDayAddition(vacationPay.getVacationDays());
-        return ResponseEntity.ok("Ваши отпускные за " + vacationPay.getVacationDays() +
-                days + " составили: " + calculatorUtil.calculate(vacationPay));
-    }
-
-    @PostMapping("/calculate_accurate")
-    public ResponseEntity<String> calculateVacationMoneyMoreAccurate
-            (@RequestBody VacationPay vacationPay) {
-        CalculatorUtil calculatorUtil = new CalculatorUtil();
-
-        if (vacationPay.getSalaryPerYear().intValue() < 0) {
-            return ResponseEntity.ok("Зарплата не может быть отрицательной!");
+        if (response == null) {
+            return ResponseEntity.ok("Вы неправильно заполнили параметры!");
         }
 
-        if (vacationPay.getStartDate().isAfter(vacationPay.getEndDate())) {
-            return ResponseEntity.ok("Дата начала отпуска должна быть раньше конца отпуска!");
-        }
-
-        int paymentDays = calculatorUtil.countPaymentDays(vacationPay);
-        String days = calculatorUtil.getDayAddition(paymentDays);
-        return ResponseEntity.ok("Ваши отпускные за " + paymentDays + days +
-                " составили: " + calculatorUtil.calculateMoreAccurate(vacationPay));
+        return response;
     }
 }
