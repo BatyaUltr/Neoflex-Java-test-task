@@ -17,14 +17,14 @@ class NeoflexTestTaskApplicationTests {
     private TestRestTemplate testRestTemplate;
 
     @Test
-    void checkCalculateNoBody() {
+    void testCalculateNoBody() {
         ResponseEntity<String> response = testRestTemplate
                 .getForEntity("/api/vacations/calculate", String.class);
         assertEquals(405, response.getStatusCodeValue());
     }
 
     @Test
-    void checkCalculateBodyF() {
+    void testCalculateBodyF() {
         String requestJson =
                 "{ \"salaryPerYear\": 1000000, \"vacationDays\": 2 }";
 
@@ -43,7 +43,7 @@ class NeoflexTestTaskApplicationTests {
     }
 
     @Test
-    void checkCalculateBodyS() {
+    void testCalculateBodyS() {
         String requestJson =
                 "{ \"salaryPerYear\": 1680000, \"vacationDays\": 11 }";
 
@@ -62,7 +62,7 @@ class NeoflexTestTaskApplicationTests {
     }
 
     @Test
-    void checkCalculateBodyT() {
+    void testCalculateBodyT() {
         String requestJson =
                 "{ \"salaryPerYear\": 1680000, \"vacationDays\": 21 }";
 
@@ -81,7 +81,7 @@ class NeoflexTestTaskApplicationTests {
     }
 
     @Test
-    void checkCalculateNegativeSalary() {
+    void testCalculateNegativeSalary() {
         String requestJson =
                 "{ \"salaryPerYear\": -1000000, \"vacationDays\": 2 }";
 
@@ -94,13 +94,13 @@ class NeoflexTestTaskApplicationTests {
                 .postForEntity("/api/vacations/calculate", request, String.class);
         System.out.println(response.getBody());
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
                 .contains("Зарплата не может быть отрицательной!"));
     }
 
     @Test
-    void checkCalculateMinDays() {
+    void testCalculateMinMaxDays() {
         String requestJson =
                 "{ \"salaryPerYear\": 1000000, \"vacationDays\": -1 }";
 
@@ -113,15 +113,20 @@ class NeoflexTestTaskApplicationTests {
                 .postForEntity("/api/vacations/calculate", request, String.class);
         System.out.println(response.getBody());
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
-                .contains("Количество отпускных дней не может быть меньше 1!"));
+                .contains("Количество дней должно быть в диапазоне от 1 до 365 дней!"));
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+    //Далее проверка с датами ///////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     @Test
-    void checkCalculateMaxDays() {
+    void testAccurateCalculateWrongDates() {
         String requestJson =
-                "{ \"salaryPerYear\": 1000000, \"vacationDays\": 1000 }";
+                "{ \"salaryPerYear\": 1680000, \"startDate\": \"03.03.2025\", " +
+                        "\"endDate\": \"21.02.2025\" }";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -129,11 +134,11 @@ class NeoflexTestTaskApplicationTests {
         HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
 
         ResponseEntity<String> response = testRestTemplate
-                .postForEntity("/api/vacations/calculate", request, String.class);
+                .postForEntity("/api/vacations/calculate_accurate", request, String.class);
         System.out.println(response.getBody());
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
-                .contains("Количество отпускных дней не может превышать 365!"));
+                .contains("Дата начала отпуска должна быть раньше конца отпуска!"));
     }
 }
