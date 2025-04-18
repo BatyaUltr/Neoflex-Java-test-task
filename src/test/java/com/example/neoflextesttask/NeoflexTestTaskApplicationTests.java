@@ -27,6 +27,7 @@ class NeoflexTestTaskApplicationTests {
     void testCalculateBodyF() {
         String url = "/api/vacations/calculate?salaryPerYear=1000000&vacationDays=2";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
+        System.out.println(response.getBody());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
@@ -58,7 +59,7 @@ class NeoflexTestTaskApplicationTests {
         String url = "/api/vacations/calculate?salaryPerYear=-1680000&vacationDays=11";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
                 .contains("Зарплата не может быть отрицательной!"));
     }
@@ -68,7 +69,7 @@ class NeoflexTestTaskApplicationTests {
         String url = "/api/vacations/calculate?salaryPerYear=1680000&vacationDays=-11";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
                 .contains("Количество дней должно быть в диапазоне от 1 до 365 дней!"));
     }
@@ -79,18 +80,18 @@ class NeoflexTestTaskApplicationTests {
 
     @Test
     void testAccurateCalculateWrongDates() {
-        String url = "localhost:8080/api/vacations/calculate?" +
+        String url = "/api/vacations/calculate?" +
                 "salaryPerYear=600000&startDate=2025-05-17&endDate=2025-04-28";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
                 .contains("Дата начала отпуска должна быть раньше конца отпуска!"));
     }
 
     @Test
     void testAccurateCalculateDatesF() {
-        String url = "localhost:8080/api/vacations/calculate?" +
+        String url = "/api/vacations/calculate?" +
                 "salaryPerYear=600000&startDate=2025-04-17&endDate=2025-04-28";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
 
@@ -101,22 +102,48 @@ class NeoflexTestTaskApplicationTests {
 
     @Test
     void testAccurateCalculateDatesS() {
-        String url = "localhost:8080/api/vacations/calculate?" +
+        String url = "/api/vacations/calculate?" +
                 "salaryPerYear=600000&startDate=2025-01-01&endDate=2025-01-14";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
-                .contains("Ваши отпускные за 4 дня составили: 19112.64"));
+                .contains("Ваши отпускные за 4 дня составили: 6825.92"));
     }
 
     @Test
     void testAccurateCalculateLessParam() {
-        String url = "localhost:8080/api/vacations/calculate?salaryPerYear=600000";
+        String url = "/api/vacations/calculate?salaryPerYear=1680000";
+        ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody())
+                .contains("Ошибка в заполнении параметров!"));
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    //Далее проверка с датой начала и количеством отпускных дней ////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    void testAccurateCalculateDateAndDaysF() {
+        String url = "/api/vacations/calculate?" +
+                "salaryPerYear=600000&startDate=2025-04-17&vacationDays=7";
         ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody())
-                .contains("Вы неправильно заполнили параметры!"));
+                .contains("Ваши отпускные за 5 дней составили: 8532.40"));
+    }
+
+    @Test
+    void testAccurateCalculateDateAndDaysS() {
+        String url = "/api/vacations/calculate?" +
+                "salaryPerYear=600000&startDate=2025-01-01&vacationDays=14";
+        ResponseEntity<String> response = testRestTemplate.getForEntity(url, String.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody())
+                .contains("Ваши отпускные за 4 дня составили: 6825.92"));
     }
 }

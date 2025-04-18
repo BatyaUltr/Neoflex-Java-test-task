@@ -1,5 +1,6 @@
 package com.example.neoflextesttask.util;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -53,6 +54,9 @@ public class CalculatorUtil {
             MonthDay.of(Month.DECEMBER, 31)
     );
 
+    public static final Integer minDays = 1;
+    public static final Integer maxDays = 365;
+
     public BigDecimal calculate(BigDecimal salaryPerYear, int vacationDays) {
         return salaryPerYear
                 .divide(months, scale, RoundingMode.HALF_UP)
@@ -60,7 +64,7 @@ public class CalculatorUtil {
                 .multiply(new BigDecimal(vacationDays));
     }
 
-    public BigDecimal calculateMoreAccurate(BigDecimal salaryPerYear, LocalDate start, LocalDate end) {
+    public BigDecimal calculate(BigDecimal salaryPerYear, LocalDate start, LocalDate end) {
         int paymentDays = countPaymentDays(start, end);
 
         return salaryPerYear
